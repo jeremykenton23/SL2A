@@ -1,0 +1,55 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Trigger de pipeline bij elke push naar de main branch
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2  # Haal de repository op
+    
+    - name: Set up .NET Core
+      uses: actions/setup-dotnet@v1  # Zet .NET Core op voor gebruik in de pipeline
+      with:
+        dotnet-version: '8.0.204'  # Specificeer de gewenste versie van .NET Core
+    
+    - name: Build Docker image
+      run: |
+        docker build -t wpf_app .
+    
+    - name: Run tests
+      run: |
+        docker run --rm wpf_app dotnet test --logger "trx;LogFileName=test_results.trx"
+    
+    - name: Publish Test Results
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results
+        path: test_results.trx  # Publiceer de testresultaten als een artifact
+    
+  deploy:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'  # Voer deze stap alleen uit als de push naar de main branch was
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: your-dockerhub-username/your-image-name:latest  # Vervang dit door je Docker Hub gebruikersnaam en beeldnaam
+        build-args: |
+          SOME_ARG=value  # Indien nodig kun je build argumenten hier toevoegen
