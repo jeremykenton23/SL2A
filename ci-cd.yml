@@ -1,4 +1,4 @@
-name: WPF App CI/CD
+name: CI/CD Pipeline
 
 on:
   push:
@@ -10,37 +10,28 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore Dependencies
+        run: dotnet restore YourWpfApp/YourWpfApp.csproj
 
-      - name: Build
-        run: dotnet build --configuration Release
+      - name: Build Solution
+        run: dotnet build YourWpfApp/YourWpfApp.csproj -c Release
 
-      - name: Test
-        run: dotnet test --no-build --verbosity normal
+      - name: Run Unit Tests
+        run: dotnet test YourWpfApp/YourWpfApp.csproj
 
-      - name: Publish
-        run: dotnet publish -c Release -o publish
+      - name: Publish Application
+        run: dotnet publish YourWpfApp/YourWpfApp.csproj -c Release -o ./publish
 
-  deploy:
-    runs-on: windows-latest
-
-    needs: build
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: publish
-          path: publish
-
-      # Add your deployment steps here
-      # For example, deploying to Azure, AWS, or any other platform
+          name: published-app
+          path: ./publish
