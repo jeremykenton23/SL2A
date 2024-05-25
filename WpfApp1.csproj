@@ -8,4 +8,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="WpfApp1 - Copy.csproj.user" />
+  </ItemGroup>
+
 </Project>
